@@ -14,7 +14,7 @@ import datetime
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
-nb_color = 0xc16950
+mb_color = 0xc16950
 piss_channel = 983896047514439682 #general
 #piss_channel = logs_channel
 
