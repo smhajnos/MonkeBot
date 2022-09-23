@@ -35,9 +35,10 @@ async def log(s):
     
     
     
+
 @tasks.loop(seconds=3600)
 async def pisscheck():
-    pissday = datetime.date(2022,7,20)
+    pissday = datetime.date(2022,9,22)
     today = datetime.date.today()
     delta = today - pissday
     pissdays = delta.days
