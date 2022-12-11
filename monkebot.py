@@ -38,7 +38,7 @@ async def log(s):
 
 @tasks.loop(seconds=3600)
 async def pisscheck():
-    pissday = datetime.date(2022,9,22)
+    pissday = datetime.date(2022,9,20)
     today = datetime.date.today()
     delta = today - pissday
     pissdays = delta.days
@@ -54,6 +54,8 @@ async def pisscheck():
         with open("lastpisscheck.txt","w") as pissfile:
             pissfile.write(str(pissdays))
             
+            
+def getesdrisk()
 
 @bot.event
 async def on_ready():
