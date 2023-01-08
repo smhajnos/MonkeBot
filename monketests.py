@@ -9,7 +9,15 @@ import esd
 import monkebotsecrets
 from geopy import Nominatim
 import requests
+import sqlite3
 
+
+dataWarehouse = sqlite3.connect("datawarehouse.db")
+cursor = dataWarehouse.cursor()
+def commit():
+    dataWarehouse.commit()
+    
+    
 def pisstest1():
     pissday = datetime.date(2022,7,20)
     today = datetime.date.today()
@@ -42,3 +50,16 @@ def esdtest3():
     esdchecker = esd.ESDChecker(monkebotsecrets.OWM_KEY)
     print(esdchecker.getESDRisk("York, PA"))
     
+    
+def getconfig(param):
+    cursor.execute("SELECT val FROM config WHERE param = ?",(param,))
+    res = cursor.fetchone()
+    return res[0]
+
+def setconfig(param, val):
+    cursor.execute("SELECT COUNT(*) FROM config WHERE param = ?",(param,))
+    res = cursor.fetchone()
+    if res[0] > 0:
+            cursor.execute("DELETE FROM config WHERE param = ?",(param,))
+    cursor.execute("INSERT INTO config (param, val) VALUES (?,?)",(param,val,))
+    commit()
