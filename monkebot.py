@@ -209,6 +209,16 @@ async def reactrole(payload,add):
                 if role in user.roles:
                     print("Removing the {} role from {}".format(role,user))
                     await user.remove_roles(role)
+
+
+async def thanos(message):
+    if message.author.id == 689365676007489542:
+        thanos_emoji = bot.get_emoji(1186493812655272008)
+        await message.add_reaction(thanos_emoji)
+
+@bot.event
+async def on_message(message):
+      await thanos(message) 
             
 @bot.event
 async def on_raw_reaction_add(payload):
