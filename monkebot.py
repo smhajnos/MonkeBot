@@ -66,6 +66,9 @@ async def ping(ctx):
 
 
 
+async def monke_log(s):
+    lc = bot.get_channel(logs_channel)
+    await lc.send(s)
 
 
 
@@ -162,10 +165,41 @@ async def reactionroles():
         
             
 
-@bot.slash_command(name="emojitest",description="Emoji test")
-async def log(s):
-    lc = bot.get_channel(logs_channel)
-    await lc.send(s)
+
+@bot.slash_command(name="vote",description="Call a vote",guild_ids=[monke_server])
+async def vote(ctx, text):
+    await ctx.send("Calling your vote!",ephemeral=True)
+    await monke_log("{} called a vote with text {}".format(ctx.user.name,text))
+    em = nextcord.Embed(color=mb_color,description=text,title="Someone called a vote!")
+    msg = await ctx.channel.send(embed=em)
+    vote_emoji = bot.get_emoji(1192286485286752326)
+    await msg.add_reaction(vote_emoji)
+    vote_emoji = bot.get_emoji(1192286483420303390)
+    await msg.add_reaction(vote_emoji)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     
     
