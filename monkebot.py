@@ -166,8 +166,8 @@ async def reactionroles():
             
 
 
-@bot.slash_command(name="vote",description="Call a vote",guild_ids=[monke_server])
-async def vote(ctx, text):
+@bot.slash_command(name="callvote",description="Call a vote",guild_ids=[monke_server])
+async def callvote(ctx, text):
     await ctx.send("Calling your vote!",ephemeral=True)
     await monke_log("{} called a vote with text {}".format(ctx.user.name,text))
     em = nextcord.Embed(color=mb_color,description=text,title="Someone called a vote!")
