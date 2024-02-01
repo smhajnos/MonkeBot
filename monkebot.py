@@ -250,9 +250,39 @@ async def thanos(message):
         thanos_emoji = bot.get_emoji(1186493812655272008)
         await message.add_reaction(thanos_emoji)
 
+async def dm_display(message):
+    if isinstance(message.channel, nextcord.DMChannel):
+        chan = bot.get_channel(staff_channel)
+        
+        timestamp = message.created_at.timestamp()
+        em = nextcord.Embed(color=mb_color,description=message.content,title="New DM!")
+        em.set_author(name=message.author.name,icon_url=message.author.display_avatar.url)
+        if len(message.attachments)==0:
+            await chan.send(embed=em)
+        elif len(message.attachments)==1:
+            attach = message.attachments[0]
+            if "image" in attach.content_type:
+                print(message.attachments[0].url)
+                em.set_image(url=message.attachments[0].url)
+            else:
+                em.add_field(name="attachment:", value=message.attachments[0].url)
+            await chan.send(embed=em)
+        else:
+            await chan.send(embed=em)
+            for attach in message.attachments:
+                em = nextcord.Embed(color=mb_color,description="",title="Attachments!")
+                if "image" in attach.content_type:
+                    em.set_image(url=attach.url)
+                else:
+                    em.add_field(name="attachment:", value=message.attachments[0].url)
+                await chan.send(embed=em)
+        
+
+
 @bot.event
 async def on_message(message):
       await thanos(message) 
+      await dm_display(message)
             
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -276,12 +306,17 @@ async def on_ready():
     
     
     #update reaction roles that may have changed since last restart
-    await reactionroles()
+    try:
+        await reactionroles()
+    except:
+        pass
     
     #start timers
-    if not pisscheck.is_running():
-        pisscheck.start()
-        
+    try:
+        if not pisscheck.is_running():
+            pisscheck.start()
+    except:
+        pass
 
 
 
