@@ -206,7 +206,7 @@ async def callvote(ctx, text):
 
 @tasks.loop(seconds=3600)
 async def pisscheck():
-    pissday = datetime.date(2022,9,20)
+    pissday = datetime.date(2024,8,3)
     today = datetime.date.today()
     delta = today - pissday
     pissdays = delta.days
