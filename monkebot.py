@@ -12,6 +12,7 @@ from nextcord.ext import commands, tasks
 import monkebotsecrets
 import datetime
 import sqlite3
+import monkecloud
 
 
 monke_server = 983896046700736522
@@ -21,8 +22,11 @@ piss_channel = 983896047514439682 #general
 staff_channel = 983900126605107260 #staff-bots
 #piss_channel = logs_channel
 
-dataWarehouse = sqlite3.connect("datawarehouse.db")
-cursor = dataWarehouse.cursor()
+#dataWarehouse = sqlite3.connect("datawarehouse.db")
+#cursor = dataWarehouse.cursor()
+dataWarehouse = None
+cursor = None
+
 
 intents = nextcord.Intents.all()
 #intents.members = True
@@ -35,7 +39,9 @@ bot = commands.Bot(command_prefix='}', intents=intents)
 
 def commit():
     dataWarehouse.commit()
-    #backup to cloud?
+    #backup to cloud? - no, do that with a different call to minimize writes
+   
+    
 
 async def staff_command(ctx):
     ctx.channel.id = staff_channel
@@ -66,7 +72,11 @@ async def ping(ctx):
 
 
 
-async def monke_log(s):
+async def monke_log(s, emergent = False):
+    if emergent:
+        log_str = "<@145372956304867328> EMERGENT: " + s
+    else:
+        log_str = s
     lc = bot.get_channel(logs_channel)
     await lc.send(s)
 
@@ -78,12 +88,16 @@ async def monke_log(s):
 async def addrr(ctx,emoji, role,desc):
     cursor.execute("INSERT INTO reactroles (emoji, role, desc) VALUES (?,?,?)",(emoji,role,desc))
     commit()
-    await ctx.send("Done! Don't forget to use `/updaterr` to update the message!")
+    await ctx.send("Done! Don't forget to use `/updaterr` to save your changes!")
     
 
 @bot.slash_command(name="updaterr",description="Update reaction role message",guild_ids=[monke_server])
 @commands.check(staff_command)    
 async def updaterr(ctx):
+    await ctx.send("Uploading changes to cloud...")
+    if not monkecloud.upload_all():
+        await monke_log("Cloud save error in updaterr", True)
+    await ctx.send("Done. Updating reaction role message.")
     rrhold = True
     data = getconfig("rrdesc")
     data = "{}\r\n\r\n".format(data)
@@ -183,9 +197,17 @@ async def callvote(ctx, text):
 
 
 
+@bot.slash_command(name="download_monkefiles",description="Please don't use this command if you don't know what you are doing.",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def download_monkefiles(ctx):
+    monkecloud.download_all()
+    await ctx.send("Done!")
 
-
-
+@bot.slash_command(name="upload_monkefiles",description="Please don't use this command if you don't know what you are doing.",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def upload_monkefiles(ctx):
+    monkecloud.upload_all()
+    await ctx.send("Done!")
 
 
 
@@ -211,7 +233,7 @@ async def pisscheck():
     delta = today - pissday
     pissdays = delta.days
     print("Days since last piss: {}".format(pissdays))
-    with open("lastpisscheck.txt","r") as pissfile:
+    with open("savedata/lastpisscheck.txt","r") as pissfile:
         try:
             lastpissdays = int(pissfile.read())
         except:
@@ -219,8 +241,11 @@ async def pisscheck():
     if lastpissdays < pissdays:
         pc = bot.get_channel(piss_channel)
         await pc.send("Days since dalty pissed on the floor: {}".format(pissdays))
-        with open("lastpisscheck.txt","w") as pissfile:
+        with open("savedata/lastpisscheck.txt","w") as pissfile:
             pissfile.write(str(pissdays))
+        cloudsuccess = monkecloud.upload_file("lastpisscheck.txt")
+        if not cloudsuccess:
+            await monke_log("Cloud save error in pisscheck", True)
             
 
 
@@ -322,4 +347,7 @@ async def on_ready():
 
 
 print("Starting bot")
+monkecloud.download_all()
+dataWarehouse = sqlite3.connect("savedata/datawarehouse.db")
+cursor = dataWarehouse.cursor()
 bot.run(monkebotsecrets.DISCORD_TOKEN)

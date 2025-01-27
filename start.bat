@@ -1,2 +1,2 @@
-py monkebot.py
+python3 monkebot.py
 pause

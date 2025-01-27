@@ -5,9 +5,9 @@ Created on Sat Jul 30 23:43:14 2022
 @author: sam
 """
 import datetime
-import esd
+#import esd
 import monkebotsecrets
-from geopy import Nominatim
+#from geopy import Nominatim
 import requests
 import sqlite3
 
@@ -36,19 +36,19 @@ def pisstest1():
             
             
             
-def esdtest1():
-    location = Nominatim(user_agent="MonkeBot").geocode("York, PA")
-    url = "http://api.openweathermap.org/geo/1.0/reverse?lat={}&lon={}&limit=1&appid={}".format(location.latitude,location.longitude,monkebotsecrets.OWM_KEY)
+#def esdtest1():
+#    location = Nominatim(user_agent="MonkeBot").geocode("York, PA")
+#    url = "http://api.openweathermap.org/geo/1.0/reverse?lat={}&lon={}&limit=1&appid={}".format(location.latitude,location.longitude,monkebotsecrets.OWM_KEY)
     
-def esdtest2():
-    location = Nominatim(user_agent="MonkeBot").geocode("York, PA")
-    url = "https://api.openweathermap.org/data/3.0/onecall?lat={}&lon={}&appid={}".format(location.latitude,location.longitude,monkebotsecrets.OWM_KEY)
-    response = requests.get(url)
-    print(response)
+#def esdtest2():
+#    location = Nominatim(user_agent="MonkeBot").geocode("York, PA")
+#    url = "https://api.openweathermap.org/data/3.0/onecall?lat={}&lon={}&appid={}".format(location.latitude,location.longitude,monkebotsecrets.OWM_KEY)
+#    response = requests.get(url)
+#    print(response)
     
-def esdtest3():
-    esdchecker = esd.ESDChecker(monkebotsecrets.OWM_KEY)
-    print(esdchecker.getESDRisk("York, PA"))
+#def esdtest3():
+#    esdchecker = esd.ESDChecker(monkebotsecrets.OWM_KEY)
+#    print(esdchecker.getESDRisk("York, PA"))
     
     
 def getconfig(param):
@@ -63,3 +63,11 @@ def setconfig(param, val):
             cursor.execute("DELETE FROM config WHERE param = ?",(param,))
     cursor.execute("INSERT INTO config (param, val) VALUES (?,?)",(param,val,))
     commit()
+    
+    
+def walktests():
+    import os
+    f = []
+    for (dirpath, dirnames, filenames) in os.walk(os.getcwd() + "/savedata"):
+        f.extend(filenames)
+    print(f)
