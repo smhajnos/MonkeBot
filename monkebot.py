@@ -141,6 +141,15 @@ async def initrr(ctx,channel,desc):
     setconfig("rrdesc",desc)
     rrhold = False
     await ctx.send("Done!")
+    
+@bot.slash_command(name="deleterr",description="Delete a reaction role",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def deleterr(ctx,desc):
+    rrhold = True
+    cursor.execute("DELETE FROM reactroles WHERE desc = ?")
+    commit()
+    rrhold = False
+    await ctx.send("Done! Don't forget to use `/updaterr` to update the message!")
 
 
 async def reactionroles():
