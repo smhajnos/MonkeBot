@@ -146,7 +146,8 @@ async def initrr(ctx,channel,desc):
 @commands.check(staff_command)
 async def deleterr(ctx,desc):
     rrhold = True
-    cursor.execute("DELETE FROM reactroles WHERE desc = ?")
+    await ctx.response.defer(ephemeral=False,with_message=False)
+    cursor.execute("DELETE FROM reactroles WHERE desc = ?", (desc,))
     commit()
     rrhold = False
     await ctx.send("Done! Don't forget to use `/updaterr` to update the message!")
