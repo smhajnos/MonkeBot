@@ -13,6 +13,7 @@ import monkebotsecrets
 import datetime
 import sqlite3
 import monkecloud
+import random
 
 
 monke_server = 983896046700736522
@@ -284,6 +285,12 @@ async def thanos(message):
     if message.author.id == 689365676007489542:
         thanos_emoji = bot.get_emoji(1186493812655272008)
         await message.add_reaction(thanos_emoji)
+        
+        
+async def gwenchana(message):
+    if random.uniform(0,1) <= 0.001 and message.author.id != 1000524966762127501:
+        await message.channel.send("<a:gwenchana:1346421255980585012> Gwenchana! <a:gwenchana:1346421255980585012>")
+        
 
 async def dm_display(message):
     if isinstance(message.channel, nextcord.DMChannel):
@@ -318,6 +325,7 @@ async def dm_display(message):
 async def on_message(message):
       await thanos(message) 
       await dm_display(message)
+      await gwenchana(message)
             
 @bot.event
 async def on_raw_reaction_add(payload):
