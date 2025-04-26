@@ -18,17 +18,7 @@ def download_all():
     # TL;DR only use this method to dowload files that exist in both locations.
     
     # Returns TRUE if the operation was successful
-    try:
-        storage_client = storage.Client(project="stevethecowbots")
-        bucket = storage_client.bucket("stevethecowbots")
-        blobs = storage_client.list_blobs(bucket)
-        for blob in blobs:
-            if blob.name.startswith(blob_folder_name) and not blob.name.endswith("/"):
-                #print(local_folder_name + blob.name[len(blob_folder_name):])
-                blob.download_to_filename(local_folder_name + blob.name[len(blob_folder_name):])
-        return True
-    except:
-        return False
+    return True
     
 def upload_all():
     # This will upload all files in the local "savedata" folder
@@ -41,6 +31,7 @@ def upload_all():
     # TL;DR only use this method to upload files that exist in both locations.
     
     # Returns TRUE if the operation was successful
+    """
     try:
         storage_client = storage.Client(project="stevethecowbots")
         bucket = storage_client.bucket("stevethecowbots")
@@ -51,7 +42,8 @@ def upload_all():
         return True
     except:
         return False
-            
+    """        
+    return True
             
 def upload_file(filename):
     # Uploads a specific file. 
@@ -59,14 +51,7 @@ def upload_file(filename):
     # which has a corrosponding file in the cloud "savedata" folder.
     
     # Returns TRUE if the operation was successful
-    try:
-        storage_client = storage.Client(project="stevethecowbots")
-        bucket = storage_client.bucket("stevethecowbots")
-        blob = bucket.blob(blob_folder_name + filename)
-        blob.upload_from_filename(local_folder_name + filename)
-        return True
-    except:
-        return False
+    return True
     
     
             
