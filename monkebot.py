@@ -14,7 +14,7 @@ import datetime
 import sqlite3
 import monkecloud
 import random
-
+import NatesImages
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
@@ -96,9 +96,10 @@ async def addrr(ctx,emoji, role,desc):
 @commands.check(staff_command)    
 async def updaterr(ctx):
     await ctx.send("Uploading changes to cloud...")
-    if not monkecloud.upload_all():
-        await monke_log("Cloud save error in updaterr", True)
-    await ctx.send("Done. Updating reaction role message.")
+    monkecloud.upload_all()
+    #if not monkecloud.upload_all():
+    #    await monke_log("Cloud save error in updaterr", True)
+    #await ctx.send("Done. Updating reaction role message.")
     rrhold = True
     data = getconfig("rrdesc")
     data = "{}\r\n\r\n".format(data)
@@ -229,7 +230,31 @@ async def upload_monkefiles(ctx):
 
 
 
+@bot.slash_command(name="where",description="where banana",guild_ids=[monke_server])
+async def where_banana(ctx, text):  
+    (filename, temp_files) = NatesImages.where_banana(text)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="where.png"))
+    NatesImages.cleanup(temp_files)
 
+
+
+
+
+
+
+@bot.message_command(name="agree",guild_ids=[monke_server])
+async def agree(ctx, message):
+    print("agreeing")
+    await ctx.user.send(content="Working on your `agree` image...")
+    husband = await message.author.avatar.read()
+    wife = await ctx.user.avatar.read()
+    text = message.content
+    print(husband)
+    print(wife)
+    print(text)
+    (filename, temp_files) = await NatesImages.agree(text, husband, wife)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
+    NatesImages.cleanup(temp_files)
 
 
 
@@ -288,12 +313,16 @@ async def thanos(message):
         
         
 async def gwenchana(message):
-    if random.uniform(0,1) <= 0.001 and message.author.id != 1000524966762127501:
-        await message.channel.send("<a:gwenchana:1346421255980585012> Gwenchana! <a:gwenchana:1346421255980585012>")
+    if message.author.id != 1000524966762127501:
+        if random.uniform(0,1) <= 0.001:
+            await message.channel.send("<a:gwenchana:1346421255980585012> Gwenchana! <a:gwenchana:1346421255980585012>")
+        elif random.uniform(0,1) <= 0.001:
+            await message.channel.send("EYY I'M WALKIN HERE!")
+        
         
 
 async def dm_display(message):
-    if isinstance(message.channel, nextcord.DMChannel):
+    if isinstance(message.channel, nextcord.DMChannel) and message.author.id !=  1000524966762127501:
         chan = bot.get_channel(staff_channel)
         
         timestamp = message.created_at.timestamp()
