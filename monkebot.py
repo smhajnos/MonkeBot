@@ -14,7 +14,7 @@ import datetime
 import sqlite3
 import monkecloud
 import random
-import NatesImages
+import MonkeImages
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
@@ -232,9 +232,9 @@ async def upload_monkefiles(ctx):
 
 @bot.slash_command(name="where",description="where banana",guild_ids=[monke_server])
 async def where_banana(ctx, text):  
-    (filename, temp_files) = NatesImages.where_banana(text)
+    (filename, temp_files) = MonkeImages.where_banana(text)
     await ctx.send(content=None,file=nextcord.File(filename,filename="where.png"))
-    NatesImages.cleanup(temp_files)
+    MonkeImages.cleanup(temp_files)
 
 
 
@@ -252,12 +252,20 @@ async def agree(ctx, message):
     print(husband)
     print(wife)
     print(text)
-    (filename, temp_files) = await NatesImages.agree(text, husband, wife)
+    (filename, temp_files) = await MonkeImages.agree(text, husband, wife)
     await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
-    NatesImages.cleanup(temp_files)
+    MonkeImages.cleanup(temp_files)
 
 
-
+@bot.message_command(name="balls",guild_ids=[monke_server])
+async def balls(ctx, message):
+    print("balls")
+    await ctx.user.send(content="Working on your `balls` image...")
+    text = message.content
+    print(text)
+    (filename, temp_files) = await MonkeImages.monkeballs(text)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="balls.png"))
+    MonkeImages.cleanup(temp_files)
     
     
     
