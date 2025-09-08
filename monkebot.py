@@ -267,7 +267,14 @@ async def agree(ctx, message):
         await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
         MonkeImages.cleanup(temp_files)
         
-
+        
+@bot.user_command(name="angst",guild_ids=[monke_server])
+async def angst(ctx, member):
+    print("angst time")
+    pfp = await member.avatar.read()
+    (filename, temp_files) = MonkeImages.angst(pfp)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="angst.png"))
+    MonkeImages.cleanup(temp_files)
 
 @bot.message_command(name="balls",guild_ids=[monke_server])
 async def balls(ctx, message):

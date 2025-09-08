@@ -217,6 +217,19 @@ async def monkeballs(txt):
     temp_files.append(filename)
     return (filename,temp_files)  
 
+def angst(pfp):
+    temp_files = []
+    img = Image.open("img/angst/back.png")
+    img2 = Image.open(BytesIO(pfp)).convert("RGBA")
+    img2 = img2.resize((750,750),Image.LANCZOS)
+    img.paste(img2,(504,106),img2)
+    img3 = Image.open("img/angst/front.png")
+    img.paste(img3,(0,0),img3)
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files)
+
 def cleanup(temp_files):
     for file in temp_files:
         os.remove(file)
