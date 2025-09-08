@@ -249,12 +249,24 @@ async def agree(ctx, message):
     husband = await message.author.avatar.read()
     wife = await ctx.user.avatar.read()
     text = message.content
-    print(husband)
-    print(wife)
+    pics = message.attachments
     print(text)
-    (filename, temp_files) = await MonkeImages.agree(text, husband, wife)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
-    MonkeImages.cleanup(temp_files)
+    print(pics)
+    if text != "" or pics == []:  
+        print(husband)
+        print(wife)
+        print(text)
+        (filename, temp_files) = await MonkeImages.agree(text, husband, wife)
+        await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
+        MonkeImages.cleanup(temp_files)
+    else:
+        print(husband)
+        print(wife)
+        img2 = await pics[0].read()
+        (filename, temp_files) = await MonkeImages.imgagree(img2, husband, wife)
+        await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
+        MonkeImages.cleanup(temp_files)
+        
 
 
 @bot.message_command(name="balls",guild_ids=[monke_server])

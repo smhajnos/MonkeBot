@@ -8,6 +8,40 @@ from io import BytesIO
 import asyncio
 
 
+
+async def imgagree(img_in, husband, wife):
+    
+    temp_files = []
+    img2 = Image.open(BytesIO(img_in)).convert("RGBA")
+    img = Image.open("img\\agree.png")
+    
+    def overlay(img,img2,position,resize):
+        img2 = img2.resize(resize,Image.LANCZOS)
+        img.paste(img2,position,img2)
+        
+    size = ((530-140,210-35))
+    origin = ((140,35))
+    overlay(img,img2,origin,size)
+    
+    
+    def overlay(img,imgbytes,position,resize):
+        img2 = Image.open(BytesIO(imgbytes)).convert("RGBA")
+        img2 = img2.resize(resize,Image.LANCZOS)
+        img.paste(img2,position,img2)
+        
+    overlay(img,husband,(80,280),(260,260))
+    overlay(img,wife,(460,430),(260,260))
+    
+    
+    
+    
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files)    
+    
+    
+    
 async def agree(text, husband, wife):
     temp_files = []
     
