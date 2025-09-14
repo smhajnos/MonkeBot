@@ -1,6 +1,7 @@
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+from PIL import ImageOps
 import uuid
 import urllib.request
 import os
@@ -8,6 +9,26 @@ from io import BytesIO
 import asyncio
 
 
+
+def idiocracy(img_in):
+    
+    temp_files = []
+    img2 = Image.open(BytesIO(img_in)).convert("RGBA")
+    img = Image.open("img\\idiocracy.png")
+    
+    def overlay(img,img2,position,resize):
+        img2 = img2.resize(resize,Image.LANCZOS)
+        img.paste(img2,position,img2)
+        
+    size = ((105,105))
+    origin = ((195,160))
+    overlay(img,img2,origin,size)
+
+    
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files) 
 
 async def imgagree(img_in, husband, wife):
     
@@ -225,6 +246,64 @@ def angst(pfp):
     img.paste(img2,(504,106),img2)
     img3 = Image.open("img/angst/front.png")
     img.paste(img3,(0,0),img3)
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files)
+
+
+async def typewriter(txt):
+    temp_files = []
+    fnt = ImageFont.truetype('arial.ttf',45)
+    async def calculate_lines(text):
+        async def get_text_width(text_in):
+            await asyncio.sleep(0)
+            text_to_calc = " ".join(text_in)
+            print("Getting text width of {}".format(text_to_calc))
+            img = Image.new('RGBA', (496, 177))
+            draw = ImageDraw.Draw(img)
+
+            bbox = draw.textbbox((0,0),text_to_calc,fnt)
+            print(bbox[2] - bbox[0])
+            return bbox[2] - bbox[0]
+        total_text = text.split()
+        finished_text = []
+        remaining_text = total_text
+        while len(remaining_text) > 0:
+            i = 1 # How words we are trying to fit on this line
+            cont = True
+            while i < len(remaining_text) and cont:
+                this_line = remaining_text[0:i]
+                w = await get_text_width(this_line)
+                if w < 496: # Add 1 to i and 
+                    i += 1
+                else: # the previous i was the one we want
+                    i -= 1
+                    cont = False
+            if i == 0:
+                this_line = remaining_text[0]
+                # TODO: clip it at the right number of characters and continue on next line
+            else:   
+                this_line = remaining_text[0:i]
+            finished_text.append(this_line)
+            remaining_text = remaining_text[i:]
+            print(finished_text)
+            print(remaining_text)
+        return finished_text
+                    
+    lines = await calculate_lines(txt)
+    txt_list = []
+    for line in lines:
+        line_text = " ".join(line)
+        txt_list.append(line_text)
+    out_txt = "\n".join(txt_list)
+    img = Image.open("img/typewriter.png")
+    f = ImageFont.truetype('arial.ttf',45)
+    txt_img = Image.new('L', (496,177))
+    d = ImageDraw.Draw(txt_img)
+    d.text( (0, 0),out_txt,  font=f, fill=255)
+    w=txt_img.rotate(25.7,  expand=1)
+    img.paste( ImageOps.colorize(w, (0,0,0), (255,255,84)), (125,-50),  w)
     filename = "tmp\\{}.png".format(str(uuid.uuid4()))
     img.save(filename)
     temp_files.append(filename)

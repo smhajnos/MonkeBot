@@ -266,6 +266,16 @@ async def agree(ctx, message):
         (filename, temp_files) = await MonkeImages.imgagree(img2, husband, wife)
         await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
         MonkeImages.cleanup(temp_files)
+
+
+@bot.user_command(name="idiocracy",guild_ids=[monke_server])        
+async def idiocracy(ctx, member):
+    print("idiot time")
+    pfp = await member.avatar.read()
+    (filename, temp_files) = MonkeImages.idiocracy(pfp)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="idiocracy.png"))
+    MonkeImages.cleanup(temp_files)
+        
         
         
 @bot.user_command(name="angst",guild_ids=[monke_server])
@@ -284,6 +294,16 @@ async def balls(ctx, message):
     print(text)
     (filename, temp_files) = await MonkeImages.monkeballs(text)
     await ctx.send(content=None,file=nextcord.File(filename,filename="balls.png"))
+    MonkeImages.cleanup(temp_files)
+    
+@bot.message_command(name="typewriter",guild_ids=[monke_server])
+async def typwriter(ctx, message):
+    print("typewriter")
+    await ctx.user.send(content="Working on your `typewriter` image...")
+    text = message.content
+    print(text)
+    (filename, temp_files) = await MonkeImages.typewriter(text)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="typewriter.png"))
     MonkeImages.cleanup(temp_files)
     
     
