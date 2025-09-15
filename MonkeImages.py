@@ -7,7 +7,7 @@ import urllib.request
 import os
 from io import BytesIO
 import asyncio
-
+import pathlib
 
 
 def idiocracy(img_in):
@@ -150,6 +150,27 @@ async def agree(text, husband, wife):
         
     overlay(img,husband,(80,280),(260,260))
     overlay(img,wife,(460,430),(260,260))
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files)    
+
+
+
+async def spongebob(text1,text2,text3):
+    temp_files = []
+    text=text1
+    for t in [text2, text3]:
+        if t:
+            text = "\n".join([text, t])
+    img = Image.open("img/spongebob.png")
+    
+    font_size = 200
+    font = ImageFont.truetype('res/Krabby Patty.ttf',font_size)
+
+    I1 = ImageDraw.Draw(img)
+    I1.text((597,447), text,font=font, fill = (0,0,0),anchor="mm")
+    
     filename = "tmp\\{}.png".format(str(uuid.uuid4()))
     img.save(filename)
     temp_files.append(filename)

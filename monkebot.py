@@ -237,7 +237,12 @@ async def where_banana(ctx, text):
     MonkeImages.cleanup(temp_files)
 
 
-
+@bot.slash_command(name="spongebob",description="spongebob title card with the provided text",guild_ids=[monke_server])
+async def spongebob(ctx, text1, text2="", text3=""):  
+    await ctx.user.send(content="Working on your `spongebob` image...")
+    (filename, temp_files) = await MonkeImages.spongebob(text1,text2,text3)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="spongebob.png"))
+    MonkeImages.cleanup(temp_files)
 
 
 
