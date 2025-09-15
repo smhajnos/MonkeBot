@@ -309,6 +309,28 @@ async def typewriter(txt):
     temp_files.append(filename)
     return (filename,temp_files)
 
+
+def yugioh(img_in):
+    
+    temp_files = []
+    img2 = Image.open(BytesIO(img_in)).convert("RGBA")
+    img = Image.open("img/yugioh/back.png")
+            
+    size = ((208,208))
+    origin = ((56,45))
+    img2 = img2.rotate(10, expand=1)
+    img2 = img2.resize(size,Image.LANCZOS)
+    img.paste(img2,origin,img2)
+    
+    img3 = Image.open("img/yugioh/front.png")
+    img.paste(img3,((0,0)),img3) 
+    
+    
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files)    
+
 def cleanup(temp_files):
     for file in temp_files:
         os.remove(file)

@@ -306,7 +306,16 @@ async def typwriter(ctx, message):
     await ctx.send(content=None,file=nextcord.File(filename,filename="typewriter.png"))
     MonkeImages.cleanup(temp_files)
     
+@bot.user_command(name="yugioh",guild_ids=[monke_server])
+async def yugioh(ctx, member):
+    print("yugioh")
+    pfp = await member.avatar.read()
+    (filename, temp_files) = MonkeImages.yugioh(pfp)
+    await ctx.send(content=None,file=nextcord.File(filename,filename="yugioh.png"))
+    MonkeImages.cleanup(temp_files)    
     
+
+
     
 
 @tasks.loop(seconds=3600)
