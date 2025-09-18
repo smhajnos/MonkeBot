@@ -237,7 +237,8 @@ async def newspaper(headline, body, imgbytes):
     
     
     frames = frames + [canvas]      
-        
+    canvas = Image.new("RGB",(int(w1),int(h1)),(0,0,0))
+    
     # filename = "tmp\\{}.png".format(str(uuid.uuid4()))
     # img.save(filename)
     filename = "tmp\\{}.gif".format(str(uuid.uuid4()))
