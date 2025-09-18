@@ -10,6 +10,64 @@ import asyncio
 import pathlib
 
 
+def get_text_dimensions(text_string, font):
+    
+    image = Image.new('RGB', (1000, 1000))
+    draw = ImageDraw.Draw(image)
+    bbox = draw.textbbox((140,35),text_string,font=font)
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
+    return (w,h)
+
+
+async def solve(text, font, box):
+    await asyncio.sleep(0)
+    size = None
+    textsplit = text.split() #individual words
+
+    r_txt = textsplit # r_txt is the remaining words in the entire string
+    text_lines = []
+    while len(r_txt) > 0:
+        print("Remaining text: {}".format(" ".join(r_txt)))
+        i = 0 # i is how many words it is trying to fit on the current line. Start at 0 because 1 gets added
+        next_size = get_text_dimensions(r_txt[0],font) # try with just the first word
+        if next_size[0] > box[2] - box[0]: # the first word is already too long, so split it
+            j = 0
+            f_txt1 = r_txt[0][0]
+            next_size1 = get_text_dimensions(f_txt1,font)
+            while next_size1[0] < box[2] - box[0] and j<len(r_txt[0]): 
+                j += 1    
+                f_txt1 = r_txt[0][:j] #f_txt1 is the text string it is trying to fit in the box. It is a substring of the first word in r_txt
+                print("Trying with text {}".format(f_txt1))
+                next_size1 = get_text_dimensions(f_txt1,font)
+                print("Size of string: {} compared to max size {}".format(next_size1[0],box[2] - box[0]))
+            r_txt = [r_txt[0][:j-1],r_txt[0][j-1:]] + r_txt[1:]
+        else: #first word isn't too long            
+            while next_size[0] <= box[2] - box[0] and i<len(r_txt):# while the next_size is not too big, and we haven't fit all the words on the line  
+                i += 1    
+                size = next_size #the last "next_size" fit so make that the current size to use
+                txt = " ".join(r_txt[:i]) #txt is the text string it is trying to fit in the box
+                print("Trying with text {}".format(txt))
+                next_size = get_text_dimensions(txt,font)
+                print("Size of string: {} compared to max size {}".format(next_size[0],box[2] - box[0]))
+            if i > 1:
+                i = i - 1
+                txt = " ".join(r_txt[:i])
+            else:
+                txt = r_txt[0]
+            next_size = get_text_dimensions(txt,font)
+            print("Got it to fit with {} words in {} pixels".format(i,size))
+            text_lines += [txt]
+            print("Total text:\n" + "\n".join(text_lines))
+            r_txt = r_txt[i:]
+        
+    # at this point, the text is split up so that it fits in the horizontal direction. Now we check if it is too tall.
+    total_text = "\n".join(text_lines)
+    next_size = get_text_dimensions(total_text,font)
+    solved =  (next_size[1] <= box[3] - box[1])
+    return (solved, total_text, next_size)
+    
+
 def idiocracy(img_in):
     
     temp_files = []
@@ -68,67 +126,16 @@ async def agree(text, husband, wife):
     
     img = Image.open("img\\agree.png")
                     
-    def get_text_dimensions(text_string, font):
-        draw = ImageDraw.Draw(img)
-        bbox = draw.textbbox((140,35),text_string,font=font)
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
-        return (w,h)
 
     # Get the text multilined to fit into a box
     box = ((140,35,530,210))
-    async def solve(text, font_size):
-        await asyncio.sleep(0)
-        size = None
-        textsplit = text.split() #individual words
-        font = ImageFont.truetype('arial.ttf',font_size)
-        print("===== Trying with font size {}".format(font_size))
-        r_txt = textsplit # r_txt is the remaining words in the entire string
-        text_lines = []
-        while len(r_txt) > 0:
-            print("Remaining text: {}".format(" ".join(r_txt)))
-            i = 0 # i is how many words it is trying to fit on the current line. Start at 0 because 1 gets added
-            next_size = get_text_dimensions(r_txt[0],font) # try with just the first word
-            if next_size[0] > box[2] - box[0]: # the first word is already too long, so split it
-                j = 0
-                f_txt1 = r_txt[0][0]
-                next_size1 = get_text_dimensions(f_txt1,font)
-                while next_size1[0] < box[2] - box[0] and j<len(r_txt[0]): 
-                    j += 1    
-                    f_txt1 = r_txt[0][:j] #f_txt1 is the text string it is trying to fit in the box. It is a substring of the first word in r_txt
-                    print("Trying with text {}".format(f_txt1))
-                    next_size1 = get_text_dimensions(f_txt1,font)
-                    print("Size of string: {} compared to max size {}".format(next_size1[0],box[2] - box[0]))
-                r_txt = [r_txt[0][:j-1],r_txt[0][j-1:]] + r_txt[1:]
-            else: #first word isn't too long            
-                while next_size[0] <= box[2] - box[0] and i<len(r_txt):# while the next_size is not too big, and we haven't fit all the words on the line  
-                    i += 1    
-                    size = next_size #the last "next_size" fit so make that the current size to use
-                    txt = " ".join(r_txt[:i]) #txt is the text string it is trying to fit in the box
-                    print("Trying with text {}".format(txt))
-                    next_size = get_text_dimensions(txt,font)
-                    print("Size of string: {} compared to max size {}".format(next_size[0],box[2] - box[0]))
-                if i > 1:
-                    i = i - 1
-                    txt = " ".join(r_txt[:i])
-                else:
-                    txt = r_txt[0]
-                next_size = get_text_dimensions(txt,font)
-                print("Got it to fit with {} words in {} pixels".format(i,size))
-                text_lines += [txt]
-                print("Total text:\n" + "\n".join(text_lines))
-                r_txt = r_txt[i:]
-            
-        # at this point, the text is split up so that it fits in the horizontal direction. Now we check if it is too tall.
-        total_text = "\n".join(text_lines)
-        next_size = get_text_dimensions(total_text,font)
-        solved =  (next_size[1] <= box[3] - box[1])
-        return (solved, total_text, next_size)
-    
+
     font_size = 45
     solved = False
     while font_size>1 and not solved:
-        (solved, total_text, next_size) = await solve(text, font_size)
+        print("===== Trying with font size {}".format(font_size))
+        font = ImageFont.truetype('arial.ttf',font_size)
+        (solved, total_text, next_size) = await solve(text, font, box)
         if next_size[1] > box[3] - box[1]:
             font_size -= 1
     print("Solved with font size {}".format(font_size))
@@ -156,7 +163,48 @@ async def agree(text, husband, wife):
     return (filename,temp_files)    
 
 
+async def newspaper(headline, body, imgbytes):
+    temp_files = []
+    img = Image.open("img/newspaper.png")
+    
+    headline_loc = (84,227)
+    top_left_text = (84,344)
+    
+    
+    # Draw the headline
+    font_size = 50
+    font = ImageFont.truetype('res/AnticSlab-Regular.ttf',font_size)
+    
+    I1 = ImageDraw.Draw(img)
+    I1.text(headline_loc, headline,font=font, fill = (0,0,0))   
+    
+    if imgbytes:
+        # Draw the image
+        img2 = Image.open(BytesIO(imgbytes)).convert("RGBA")
+        img2 = img2.resize((258,258), Image.LANCZOS)
+        img.paste(img2,(366,304),img2)
+        
+        bbox = (84,344,282,755)
+    else:
+        bbox = (84,344,822,755)
+        
+    # Draw the body text
+    font_size = 20
+    font = ImageFont.truetype('res/AnticSlab-Regular.ttf',font_size)
+    (solved, total_text, next_size) = await solve(body, font, bbox)
+    
+    I1 = ImageDraw.Draw(img)
+    I1.text(top_left_text, total_text, font=font, fill = (0,0,0))
+    
+    
+        
+        
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    img.save(filename)
+    temp_files.append(filename)
+    return (filename,temp_files)
 
+    
 async def spongebob(text1,text2,text3):
     temp_files = []
     text=text1
