@@ -197,10 +197,51 @@ async def newspaper(headline, body, imgbytes):
     I1.text(top_left_text, total_text, font=font, fill = (0,0,0))
     
     
+
+    
+    
+    frames = []
+    w1, h1 = img.size
+    w, h = img.size
+    
+    w1 = 1000
+    h1 = 1000
+
+    timg = img.copy()
+    factor = 0.95
+    while int(h*factor) > 50 and int(w*factor) > 50:
         
+        timg = timg.copy()
+        timg = timg.resize((w,h),Image.LANCZOS)
         
-    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
-    img.save(filename)
+        canvas = Image.new("RGB",(int(w1),int(h1)),(0,0,0))
+        w0 = int(w1/2-w/2)
+        h0 = int(h1/2-h/2)
+        print("{},{} @ {},{}".format(w,h,w0,h0))
+        canvas.paste(timg,(w0,h0))
+        
+        timg = canvas.rotate(45).copy()
+        
+        canvas = Image.new("RGB",(int(w1),int(h1)),(0,0,0))
+        canvas.paste(timg,(0,0))
+
+        frames = [timg] + frames
+        w,h = int(w*factor),int(h*factor)
+    
+    w,h = img.size
+    canvas = Image.new("RGB",(int(w1),int(h1)),(0,0,0))
+    w0 = int(w1/2-w/2)
+    h0 = int(h1/2-h/2)
+    print("{},{} @ {},{}".format(w,h,w0,h0))
+    canvas.paste(img,(w0,h0))
+    
+    
+    frames = frames + [canvas]      
+        
+    # filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    # img.save(filename)
+    filename = "tmp\\{}.gif".format(str(uuid.uuid4()))
+    canvas.save(filename, save_all=True, append_images=frames, duration=50, optimize=False)
     temp_files.append(filename)
     return (filename,temp_files)
 
