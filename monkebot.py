@@ -82,7 +82,17 @@ async def monke_log(s, emergent = False):
     await lc.send(s)
 
 
-
+@bot.slash_command(name="addreaction",description="Add reaction",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def addreaction(ctx,channel, message, emoji):
+    print("1")
+    chan = bot.get_channel(int(channel))
+    print("2")
+    mes = await chan.get_partial_message(int(message)).fetch()
+    print("3")
+    await mes.add_reaction(emoji)
+    print("4")
+    await ctx.send("Done")
 
 @bot.slash_command(name="addrr",description="Add reaction role",guild_ids=[monke_server])
 @commands.check(staff_command)
@@ -155,7 +165,39 @@ async def deleterr(ctx,desc):
     await ctx.send("Done! Don't forget to use `/updaterr` to update the message!")
 
 
+@bot.slash_command(name="initmm",description="Initiate main monke reaction role.",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def initmm(ctx,channel,desc,role,emoji):
+    rrhold = True
+    chanid = int(channel[2:-1])
+    mmchan = getconfig("mmchan")
+    mmmes = getconfig("mmmes")
+    try:
+        if mmmes and mmchan:
+            mmmes = int(mmmes)
+            mmchan = int(mmchan)
+            chan = bot.get_channel(mmchan)
+            mes = await chan.get_partial_message(mmmes).fetch()
+            await mes.delete()
+    except:
+        pass
+    mmchan = chanid
+    chan = bot.get_channel(mmchan)
+    mes = await chan.send(desc)
+    
+    await mes.add_reaction(emoji)
+    
+    mmmes = mes.id
+    setconfig("mmchan",mmchan)
+    setconfig("mmmes",mmmes)
+    setconfig("mmdesc",desc)
+    setconfig("mmrole",role)
+    setconfig("mmemoji",emoji)
+    rrhold = False
+    await ctx.send("Done!")
+
 async def reactionroles():
+    monke = bot.get_guild(monke_server)
     cursor.execute("DELETE FROM tmpreactroles")
     rrchan = getconfig("rrchan")
     rrmes = getconfig("rrmes")
@@ -168,10 +210,27 @@ async def reactionroles():
         rolestr = cursor.fetchone()[0]
         async for user in reaction.users():
             cursor.execute("INSERT INTO tmpreactroles (user, role) VALUES (?,?)",(str(user.id),rolestr,))
+            
+    mmchan = getconfig("mmchan")
+    mmmes = getconfig("mmmes")
+    
+    print(mmchan)
+    print(mmmes)
+    if mmmes and mmchan:
+        chan = bot.get_channel(int(mmchan))
+        mes = await chan.get_partial_message(int(mmmes)).fetch()
+    reactions = mes.reactions
+    rolestr = getconfig("mmrole")
+    for reaction in reactions:    
+        print(str(reaction))
+        if str(reaction) == getconfig("mmemoji"):        
+            async for user in reaction.users():
+                cursor.execute("INSERT INTO tmpreactroles (user, role) VALUES (?,?)",(str(user.id),rolestr,))
+            
+            
     commit()
-    monke = bot.get_guild(monke_server)
     for role in monke.roles:
-        cursor.execute("SELECT COUNT(*) FROM reactroles WHERE role = ?", (role.mention,))
+        cursor.execute("SELECT COUNT(*) FROM tmpreactroles WHERE role = ?", (role.mention,))
         cnt = cursor.fetchone()[0]
         print("{}: {}".format(str(role),cnt))
         if cnt > 0:    
@@ -241,24 +300,26 @@ async def newspaper(ctx, headline,body,  user: nextcord.Member = None):
 
 
 @bot.slash_command(name="where",description="where banana",guild_ids=[monke_server])
-async def where_banana(ctx, text):  
+async def where_banana(ctx, text):
+    await ctx.response.defer()
     (filename, temp_files) = MonkeImages.where_banana(text)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="where.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="where.png"))
     MonkeImages.cleanup(temp_files)
 
 
 @bot.slash_command(name="spongebob",description="spongebob title card with the provided text",guild_ids=[monke_server])
-async def spongebob(ctx, text1, text2="", text3=""):  
+async def spongebob(ctx, text1, text2="", text3=""):
+    await ctx.response.defer()
     await ctx.user.send(content="Working on your `spongebob` image...")
     (filename, temp_files) = await MonkeImages.spongebob(text1,text2,text3)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="spongebob.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="spongebob.png"))
     MonkeImages.cleanup(temp_files)
-
 
 
 
 @bot.message_command(name="agree",guild_ids=[monke_server])
 async def agree(ctx, message):
+    await ctx.response.defer()
     print("agreeing")
     await ctx.user.send(content="Working on your `agree` image...")
     husband = await message.author.avatar.read()
@@ -272,61 +333,66 @@ async def agree(ctx, message):
         print(wife)
         print(text)
         (filename, temp_files) = await MonkeImages.agree(text, husband, wife)
-        await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
+        await ctx.followup.send(content=None,file=nextcord.File(filename,filename="agree.png"))
         MonkeImages.cleanup(temp_files)
     else:
         print(husband)
         print(wife)
         img2 = await pics[0].read()
         (filename, temp_files) = await MonkeImages.imgagree(img2, husband, wife)
-        await ctx.send(content=None,file=nextcord.File(filename,filename="agree.png"))
+        await ctx.followup.send(content=None,file=nextcord.File(filename,filename="agree.png"))
         MonkeImages.cleanup(temp_files)
 
 
 @bot.user_command(name="idiocracy",guild_ids=[monke_server])        
 async def idiocracy(ctx, member):
+    await ctx.response.defer()
     print("idiot time")
     pfp = await member.avatar.read()
     (filename, temp_files) = MonkeImages.idiocracy(pfp)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="idiocracy.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="idiocracy.png"))
     MonkeImages.cleanup(temp_files)
         
         
         
 @bot.user_command(name="angst",guild_ids=[monke_server])
 async def angst(ctx, member):
+    await ctx.response.defer()
     print("angst time")
     pfp = await member.avatar.read()
     (filename, temp_files) = MonkeImages.angst(pfp)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="angst.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="angst.png"))
     MonkeImages.cleanup(temp_files)
 
 @bot.message_command(name="balls",guild_ids=[monke_server])
 async def balls(ctx, message):
+    await ctx.response.defer()
     print("balls")
     await ctx.user.send(content="Working on your `balls` image...")
     text = message.content
     print(text)
     (filename, temp_files) = await MonkeImages.monkeballs(text)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="balls.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="balls.png"))
     MonkeImages.cleanup(temp_files)
     
 @bot.message_command(name="typewriter",guild_ids=[monke_server])
 async def typwriter(ctx, message):
+    await ctx.response.defer()
     print("typewriter")
     await ctx.user.send(content="Working on your `typewriter` image...")
     text = message.content
     print(text)
     (filename, temp_files) = await MonkeImages.typewriter(text)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="typewriter.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="typewriter.png"))
     MonkeImages.cleanup(temp_files)
     
 @bot.user_command(name="yugioh",guild_ids=[monke_server])
 async def yugioh(ctx, member):
+    await ctx.response.defer()
     print("yugioh")
     pfp = await member.avatar.read()
     (filename, temp_files) = MonkeImages.yugioh(pfp)
-    await ctx.send(content=None,file=nextcord.File(filename,filename="yugioh.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="yugioh.png"))
     MonkeImages.cleanup(temp_files)    
     
 
@@ -357,14 +423,14 @@ async def pisscheck():
 
 
 async def reactrole(payload,add):
-    
+    monke = bot.get_guild(monke_server)
     rrmes = getconfig("rrmes")
     if payload.message_id == int(rrmes):
         cursor.execute("SELECT role FROM reactroles WHERE emoji = ?",(str(payload.emoji),))
         res = cursor.fetchone()
         if res:
             rolestr = res[0]
-            monke = bot.get_guild(monke_server)
+            
             role = [role for role in monke.roles if role.mention == rolestr][0]
             user = monke.get_member(payload.user_id)
             if add:
@@ -375,7 +441,21 @@ async def reactrole(payload,add):
                 if role in user.roles:
                     print("Removing the {} role from {}".format(role,user))
                     await user.remove_roles(role)
-
+    
+    
+    mmmes = getconfig("mmmes")
+    if payload.message_id == int(mmmes):
+        rolestr = getconfig("mmrole")
+        role = [role for role in monke.roles if role.mention == rolestr][0]
+        user = monke.get_member(payload.user_id)
+        if add:
+            if role not in user.roles:
+                print("Giving {} the {} role".format(user, role))
+                await user.add_roles(role)
+        else:
+            if role in user.roles:
+                print("Removing the {} role from {}".format(role,user))
+                await user.remove_roles(role)
 
 async def thanos(message):
     if message.author.id == 689365676007489542:
@@ -460,6 +540,8 @@ async def on_ready():
             pisscheck.start()
     except:
         pass
+    
+    print("Done starting")
 
 
 
