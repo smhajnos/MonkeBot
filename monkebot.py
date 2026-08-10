@@ -409,8 +409,8 @@ def monkey_embed(monkey_id):
     em = nextcord.Embed(color=mb_color,description=res[1],title=res[0])
     file = nextcord.File("monkeys/{}".format(res[2]), filename="image.png")
     em.set_image(url="attachment://image.png")
-    em.add_field("Wikipedia",res[3])
-    em.add_field("Range",res[4])
+    em.add_field(name="Wikipedia",value=res[3])
+    em.add_field(name="Range",value=res[4])
     print(3)
     return (file, em)
     
