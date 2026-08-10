@@ -403,7 +403,7 @@ async def yugioh(ctx, member):
 
 def monkey_embed(monkey_id):
     print(1)
-    cursor.execute("SELECT name, scientific, picture, wikipedia, range, role FROM monkeys WHERE number = ?",str(monkey_id),)
+    cursor.execute("SELECT name, scientific, picture, wikipedia, range, role FROM monkeys WHERE number = ?",(str(monkey_id),))
     res = cursor.fetchone()
     print(2)
     em = nextcord.Embed(color=mb_color,description=res[1],title=res[0])
