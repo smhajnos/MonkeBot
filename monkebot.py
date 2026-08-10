@@ -69,6 +69,7 @@ def setconfig(param, val):
     
 @bot.slash_command(name="ping",description="Check if the bot is working", guild_ids=[monke_server])
 async def ping(ctx):
+    print("ping")
     await ctx.send("Pong!")
 
 
@@ -395,6 +396,49 @@ async def yugioh(ctx, member):
     await ctx.followup.send(content=None,file=nextcord.File(filename,filename="yugioh.png"))
     MonkeImages.cleanup(temp_files)    
     
+
+
+
+
+
+def monkey_embed(monkey_id):
+    print(1)
+    cursor.execute("SELECT name, scientific, picture, wikipedia, range, role FROM monkeys WHERE number = ?",str(monkey_id),)
+    res = cursor.fetchone()
+    print(2)
+    em = nextcord.Embed(color=mb_color,description=res[1],title=res[0])
+    file = nextcord.File("monkeys/{}".format(res[2]), filename="image.png")
+    em.set_image(url="attachment://image.png")
+    em.add_field("Wikipedia",res[3])
+    em.add_field("Range",res[4])
+    print(3)
+    return (file, em)
+    
+
+@bot.slash_command(name="monkey",description="View a monkey's ID card",guild_ids=[monke_server])
+async def monkey_cmd(ctx, monkey_id):
+    print(4)
+    (file, em) = monkey_embed(monkey_id)
+    await ctx.send(file=file, embed=em)
+    print(5)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     
