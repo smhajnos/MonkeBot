@@ -10,9 +10,10 @@ import monkebotsecrets
 #from geopy import Nominatim
 import requests
 import sqlite3
+import random
+import math
 
-
-dataWarehouse = sqlite3.connect("datawarehouse.db")
+dataWarehouse = sqlite3.connect("savedata/datawarehouse.db")
 cursor = dataWarehouse.cursor()
 def commit():
     dataWarehouse.commit()
@@ -72,6 +73,26 @@ def walktests():
         f.extend(filenames)
     print(f)
     
+
+def stock_monkeys():
+    cursor.execute("SELECT number FROM monkeys")
+    rows = [row[0] for row in cursor] 
+    daily_stock = random.randint(-10, 20)
+    ts = math.floor(datetime.datetime.now().timestamp())
+    for r in rows:
+        print(r)
+        cursor.execute("SELECT new_total FROM monkey_stocks WHERE monkey_number = ? ORDER BY transaction_datetime DESC", (r,))
+        
+        old_total_row = cursor.fetchone()
+        if old_total_row:
+            old_total = old_total_row[0]
+        else:
+            old_total = 0
+        
+        
+        monkey_stock = random.randint(-3,10)
+        cursor.execute("INSERT INTO monkey_stocks (transaction_datetime, monkey_number, delta, new_total) VALUES (?, ?, ?, ?)", (ts, r, daily_stock + monkey_stock, old_total + daily_stock + monkey_stock, ))
+    dataWarehouse.commit()
     
     
     
