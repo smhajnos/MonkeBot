@@ -576,7 +576,7 @@ def monkey_history_plot(monkey_id = -1):
 async def monkey_history_cmd(ctx, monkey_id):
     await ctx.send("Working on it...")
     filename = monkey_history_plot(monkey_id)
-    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="stonks.png"))
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="banana_stonks.png"))
     MonkeImages.cleanup([filename])
 
 @tasks.loop(seconds=3600)
