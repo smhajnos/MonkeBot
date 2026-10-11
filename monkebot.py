@@ -20,12 +20,16 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import uuid
+from nextcord.ext import application_checks
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
 mb_color = 0xc16950
 piss_channel = 983896047514439682 #general
 staff_channel = 983900126605107260 #staff-bots
+staff_role = 1174417506342019142
+mayor_role = 1558839290270580817
+admin_role = 1004081695957459095
 #piss_channel = logs_channel
 
 #dataWarehouse = sqlite3.connect("datawarehouse.db")
@@ -54,9 +58,6 @@ def commit():
    
     
 
-async def staff_command(ctx):
-    ctx.channel.id = staff_channel
-    
     
     
 def getconfig(param):
@@ -94,7 +95,7 @@ async def monke_log(s, emergent = False):
 
 
 @bot.slash_command(name="addreaction",description="Add reaction",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def addreaction(ctx,channel, message, emoji):
     print("1")
     chan = bot.get_channel(int(channel))
@@ -106,7 +107,7 @@ async def addreaction(ctx,channel, message, emoji):
     await ctx.send("Done")
 
 @bot.slash_command(name="addrr",description="Add reaction role",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def addrr(ctx,emoji, role,desc):
     cursor.execute("INSERT INTO reactroles (emoji, role, desc) VALUES (?,?,?)",(emoji,role,desc))
     commit()
@@ -114,7 +115,7 @@ async def addrr(ctx,emoji, role,desc):
     
 
 @bot.slash_command(name="updaterr",description="Update reaction role message",guild_ids=[monke_server])
-@commands.check(staff_command)    
+@application_checks.has_role(staff_role)    
 async def updaterr(ctx):
     await ctx.send("Uploading changes to cloud...")
     monkecloud.upload_all()
@@ -140,7 +141,7 @@ async def updaterr(ctx):
     
 
 @bot.slash_command(name="initrr",description="Initiate reaction role. This will reset reaction roles!",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def initrr(ctx,channel,desc):
     rrhold = True
     chanid = int(channel[2:-1])
@@ -166,7 +167,7 @@ async def initrr(ctx,channel,desc):
     await ctx.send("Done!")
     
 @bot.slash_command(name="deleterr",description="Delete a reaction role",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def deleterr(ctx,desc):
     rrhold = True
     await ctx.response.defer(ephemeral=False,with_message=False)
@@ -177,7 +178,7 @@ async def deleterr(ctx,desc):
 
 
 @bot.slash_command(name="initmm",description="Initiate main monke reaction role.",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def initmm(ctx,channel,desc,role,emoji):
     rrhold = True
     chanid = int(channel[2:-1])
@@ -280,13 +281,13 @@ async def callvote(ctx, text):
 
 
 @bot.slash_command(name="download_monkefiles",description="Please don't use this command if you don't know what you are doing.",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def download_monkefiles(ctx):
     monkecloud.download_all()
     await ctx.send("Done!")
 
 @bot.slash_command(name="upload_monkefiles",description="Please don't use this command if you don't know what you are doing.",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def upload_monkefiles(ctx):
     monkecloud.upload_all()
     await ctx.send("Done!")
@@ -455,7 +456,7 @@ async def monkey_cmd(ctx, monkey_id):
 @bot.slash_command(name="monkey_list",description="View all the monkeys' ID cards",guild_ids=[monke_server])
 async def monkey_list_cmd(ctx):
     chan = ctx.channel
-    await ctx.send("Got it, listing monkeys...")
+    await ctx.send("Got it, listing monkeys..")
     cursor.execute("SELECT number FROM monkeys")
     rows = [row[0] for row in cursor] # When monkey_embed is called it uses the cursor, so we need to get the info out of the cursor first
     for r in rows:    
@@ -463,7 +464,7 @@ async def monkey_list_cmd(ctx):
         (file, em)  = monkey_embed(r)
         await chan.send(file=file, embed=em)
         await asyncio.sleep(0.5)
-    await ctx.send("That's it!")
+    await ctx.send("Use `/monkey` with the monkey ID to pick your monkey. Example: `/monkey 7`")
 
 async def stock_monkeys():
     stocking = True
@@ -545,7 +546,7 @@ async def stock_monkeys():
 
 
 @bot.slash_command(name="force_monkey_stocks",description="Forces the daily monkey stocks calculation. Be careful doing this multiple times.",guild_ids=[monke_server])
-@commands.check(staff_command)
+@application_checks.has_role(staff_role)
 async def monkey_stocks_cmd(ctx):
     await ctx.send("Working on it...")
     await stock_monkeys()
@@ -572,12 +573,71 @@ def monkey_history_plot(monkey_id = -1):
 
 
 @bot.slash_command(name="monkey_stock_history",description="Graphs a certain monkey's performance on the stock market.",guild_ids=[monke_server])
-@commands.check(staff_command)
 async def monkey_history_cmd(ctx, monkey_id):
     await ctx.send("Working on it...")
     filename = monkey_history_plot(monkey_id)
     await ctx.followup.send(content=None,file=nextcord.File(filename,filename="banana_stonks.png"))
     MonkeImages.cleanup([filename])
+    
+    
+    
+    
+
+
+
+@bot.slash_command(name="elect",description="Make someone the mayor.",guild_ids=[monke_server])
+@application_checks.has_role(staff_role)
+async def elect(ctx, new_mayor):
+    monke = bot.get_guild(monke_server)
+    mayor_role_role = monke.get_role(mayor_role)
+    for user in monke.members:
+        if mayor_role_role in user.roles:
+            await user.remove_roles(mayor_role_role)
+    mayor_user = [user for user in monke.members if user.mention == new_mayor][0]
+    await mayor_user.add_roles(mayor_role_role)
+    ts = math.floor(datetime.datetime.now().timestamp())
+    cursor.execute("INSERT INTO mayor_history (user, elected_dt) VALUES (?,?)", (mayor_user.id, ts,))  
+    cursor.execute("SELECT COUNT(user) FROM mayor_settings WHERE user = ?",(ctx.user.id,))
+    res = cursor.fetchone()
+    if res[0] == 0:
+        cursor.execute("INSERT INTO mayor_settings (user, stock_influence, mayorstock_influence) VALUES (?, ?, ?)",(mayor_user.id, "neutral", "neutral",))
+    dataWarehouse.commit()
+    await ctx.send("Done.")
+    
+@bot.slash_command(name="mayor_help",description="Get some help being mayor.",guild_ids=[monke_server])   
+@application_checks.has_role(mayor_role)
+async def mayor_help(ctx):
+    await ctx.send("Welcome your excellency!")
+    await ctx.send("Use `/influence_stocks up`, `/influence_stocks down`, or `/influence_stocks neutral` to manipulate the stock market!")
+    await ctx.send("Use `/insider_trade` to make the stock you have go up!")
+    await ctx.send("Make announcements in <#1558838889786122432>!")
+    
+    
+@bot.slash_command(name="influence_stocks",description="Give the stock market a nudge. Directions are up, down, and neutral.",guild_ids=[monke_server])   
+@application_checks.has_role(mayor_role)
+async def influence_stocks(ctx, direction):
+    if direction in ["up","down","neutral"]:
+        cursor.execute("SELECT COUNT(user) FROM mayor_settings WHERE user = ?",(ctx.user.id,))
+        res = cursor.fetchone()
+        if res[0] == 0:
+            cursor.execute("INSERT INTO mayor_settings (user, stock_influence, mayorstock_influence) VALUES (?, ?, ?)",(ctx.user.id, "neutral", "neutral",))
+        cursor.execute("UPDATE mayor_settings SET stock_influence = ? WHERE user = ?", (direction,ctx.user.id,))
+        dataWarehouse.commit()
+        await ctx.send("Done, influencing stocks {}".format(direction))
+    else:
+        await ctx.send("Read the command description slowly please")
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 @tasks.loop(seconds=3600)
 async def pisscheck():
@@ -605,6 +665,34 @@ async def pisscheck():
         except:
             await monke_log("Monkey stocks failed :(", emergent=True)
             
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 async def reactrole(payload,add):
