@@ -30,6 +30,7 @@ staff_channel = 983900126605107260 #staff-bots
 staff_role = 1174417506342019142
 mayor_role = 1558839290270580817
 admin_role = 1004081695957459095
+banana_stocks_channel = 1558975686184673391`
 #piss_channel = logs_channel
 
 #dataWarehouse = sqlite3.connect("datawarehouse.db")
@@ -467,11 +468,13 @@ async def monkey_list_cmd(ctx):
     await ctx.send("Use `/monkey` with the monkey ID to pick your monkey. Example: `/monkey 7`")
 
 async def stock_monkeys():
-    stocking = True
+    stocking = True    
     #Record monkeys for stocks
     cursor.execute("DELETE FROM current_monkeys")
     dataWarehouse.commit()
     ms = bot.get_guild(monke_server)
+    mayor_member = ms.get_role(mayor_role).members[0]
+    mayor_id = mayor_member.id
     for m in ms.members:
         for role in m.roles:
             cursor.execute("SELECT COUNT(number) FROM monkeys WHERE role = ?", (str(role.id),))
@@ -489,9 +492,36 @@ async def stock_monkeys():
     dataWarehouse.commit()
             
     # Calculate the bananas        
+    
+    
+    cursor.execute("SELECT stock_influence FROM mayor_settings WHERE user = ?", (mayor_id,))
+    stock_inf = cursor.fetchone()[0]
+    if stock_inf == "up":
+        daily_stock = random.randint(-10, 20)
+    elif stock_inf == "down":
+        daily_stock = random.randint(-20,10)
+    else:
+        daily_stock = random.randint(-20,20)
+        
+        
+    cursor.execute("SELECT mayorstock_influence FROM mayor_settings WHERE user = ?", (mayor_id,))
+    mstock_inf = cursor.fetchone()[0]
+    if mstock_inf == "on":
+        insider_trade =  random.randint(0,15)
+    else:
+        insider_trade = 0
+        
+    cursor.execute("SELECT role FROM monkeys",)
+    rows = [str(row[0]) for row in cursor]
+    all_monkey_roles = [role for role in ms.roles if str(role.id) in rows]
+    for tr in mayor_member.roles:
+        if tr in all_monkey_roles:
+            cursor.execute("SELECT number FROM monkeys WHERE role = ?", (str(tr.id),))
+            mayors_monkey = cursor.fetchone()[0]
+    
+    
     cursor.execute("SELECT number FROM monkeys")
     rows = [row[0] for row in cursor] 
-    daily_stock = random.randint(-10, 20)
     ts = math.floor(datetime.datetime.now().timestamp())
     for r in rows:
         print(r)
@@ -506,7 +536,10 @@ async def stock_monkeys():
         
         monkey_stock = random.randint(-3,10)
         
-        daily_monkey_stock = monkey_stock + daily_stock
+        if r == mayors_monkey:
+            daily_monkey_stock = monkey_stock + daily_stock + insider_trade
+        else:
+            daily_monkey_stock = monkey_stock + daily_stock
         cursor.execute("INSERT INTO monkey_stocks (transaction_datetime, monkey_number, delta, new_total) VALUES (?, ?, ?, ?)", (ts, r, daily_monkey_stock, old_total + daily_monkey_stock, ))
         
         
@@ -609,7 +642,7 @@ async def elect(ctx, new_mayor):
 async def mayor_help(ctx):
     await ctx.send("Welcome your excellency!")
     await ctx.send("Use `/influence_stocks up`, `/influence_stocks down`, or `/influence_stocks neutral` to manipulate the stock market!")
-    await ctx.send("Use `/insider_trade` to make the stock you have go up!")
+    await ctx.send("Use `/insider_trade on` or `/insider_trade off` to make the stock you have go up (or not)!")
     await ctx.send("Make announcements in <#1558838889786122432>!")
     
     
@@ -627,10 +660,20 @@ async def influence_stocks(ctx, direction):
     else:
         await ctx.send("Read the command description slowly please")
     
-    
-    
-    
-    
+@bot.slash_command(name="insider_trade",description="Give your stock a little nudge.",guild_ids=[monke_server])   
+@application_checks.has_role(mayor_role)
+async def iinsider_trade(ctx, on_or_off):
+    if on_or_off in ["on","off"]:
+        cursor.execute("SELECT COUNT(user) FROM mayor_settings WHERE user = ?",(ctx.user.id,))
+        res = cursor.fetchone()
+        if res[0] == 0:
+            cursor.execute("INSERT INTO mayor_settings (user, stock_influence, mayorstock_influence) VALUES (?, ?, ?)",(ctx.user.id, "neutral", "neutral",))
+        cursor.execute("UPDATE mayor_settings SET mayorstock_influence = ? WHERE user = ?", (on_or_off,ctx.user.id,))
+        dataWarehouse.commit()
+        await ctx.send("Done, insider trading is now turned {}".format(on_or_off))
+    else:
+        await ctx.send("Read the command description slowly please")    
+
     
     
     
