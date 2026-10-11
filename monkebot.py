@@ -17,6 +17,8 @@ import random
 import MonkeImages
 import asyncio
 import math
+import matplotlib.pyplot as plt
+import numpy as np
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
@@ -29,6 +31,8 @@ staff_channel = 983900126605107260 #staff-bots
 #cursor = dataWarehouse.cursor()
 dataWarehouse = None
 cursor = None
+
+stocking = False
 
 
 intents = nextcord.Intents.all()
@@ -406,6 +410,13 @@ async def yugioh(ctx, member):
 
 
 
+
+
+
+
+
+
+
 def monkey_embed(monkey_id):
     ms = bot.get_guild(monke_server)
     cursor.execute("SELECT name, scientific, picture, wikipedia, range, role FROM monkeys WHERE number = ?",(str(monkey_id),))
@@ -451,10 +462,31 @@ async def monkey_list_cmd(ctx):
         (file, em)  = monkey_embed(r)
         await chan.send(file=file, embed=em)
         await asyncio.sleep(0.5)
+    await ctx.send("That's it!")
 
-
-
-def stock_monkeys():
+async def stock_monkeys():
+    stocking = True
+    #Record monkeys for stocks
+    cursor.execute("DELETE FROM current_monkeys")
+    dataWarehouse.commit()
+    ms = bot.get_guild(monke_server)
+    for m in ms.members:
+        for role in m.roles:
+            cursor.execute("SELECT COUNT(number) FROM monkeys WHERE role = ?", (str(role.id),))
+            res = cursor.fetchone()
+            if res[0] > 1:
+                await monke_log("User {} had more than one monkey role and was skipped.".format(m.mention))
+            elif res[0] == 1:
+                print("User {} had 1 monkey role and will have stocks calculated".format(m.nick))
+                cursor.execute("SELECT number FROM monkeys WHERE role = ?", (str(role.id),))
+                monkey_id = cursor.fetchone()[0]
+                cursor.execute("INSERT INTO current_monkeys (user, monkey) VALUES  (?, ?)", (m.id, monkey_id))
+            else:
+                print("User {} had no monkey roles".format(m.nick))
+            
+    dataWarehouse.commit()
+            
+    # Calculate the bananas        
     cursor.execute("SELECT number FROM monkeys")
     rows = [row[0] for row in cursor] 
     daily_stock = random.randint(-10, 20)
@@ -471,8 +503,41 @@ def stock_monkeys():
         
         
         monkey_stock = random.randint(-3,10)
-        cursor.execute("INSERT INTO monkey_stocks (transaction_datetime, monkey_number, delta, new_total) VALUES (?, ?, ?, ?)", (ts, r, daily_stock + monkey_stock, old_total + daily_stock + monkey_stock, ))
+        
+        daily_monkey_stock = monkey_stock + daily_stock
+        cursor.execute("INSERT INTO monkey_stocks (transaction_datetime, monkey_number, delta, new_total) VALUES (?, ?, ?, ?)", (ts, r, daily_monkey_stock, old_total + daily_monkey_stock, ))
+        
+        
+        #now do it for the user
+        cursor.execute("SELECT user FROM current_monkeys WHERE monkey = ?", (r,))
+        users = [row[0] for row in cursor]
+        for user in users:
+            cursor.execute("SELECT new_total FROM user_stocks WHERE user = ? ORDER BY transaction_datetime DESC", (user,))
+            
+            old_user_total_row = cursor.fetchone()
+            if old_user_total_row:
+                old_user_total = old_user_total_row[0]
+            else:
+                old_user_total = 0
+            
+            cursor.execute("INSERT INTO user_stocks (transaction_datetime, user, monkey, delta, new_total) VALUES (?, ?, ?, ?, ?)", (ts, user, r, daily_monkey_stock, old_user_total + daily_monkey_stock, ))
+                
     dataWarehouse.commit()
+    stocking = False
+    
+    # Reorder the roles
+    cursor.execute("SELECT role FROM monkey_stocks WHERE transaction_datetime = ? ORDER BY delta DESC")
+
+
+
+@bot.slash_command(name="force_monkey_stocks",description="Forces the daily monkey stocks calculation. Be careful doing this multiple times.",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def monkey_stocks_cmd(ctx):
+    await ctx.send("Working on it...")
+    await stock_monkeys()
+    await ctx.send("Done!")
+
+
 
 
 
