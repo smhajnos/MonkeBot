@@ -19,6 +19,7 @@ import asyncio
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import uuid
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
@@ -526,8 +527,21 @@ async def stock_monkeys():
     stocking = False
     
     # Reorder the roles
-    cursor.execute("SELECT role FROM monkey_stocks WHERE transaction_datetime = ? ORDER BY delta DESC")
+    cursor.execute("SELECT monkey_number FROM monkey_stocks WHERE transaction_datetime = ? ORDER BY delta DESC", (ts,))
+    mn_rows = [row[0] for row in cursor]
+    role_rows = []
+    for mn in mn_rows:
+        cursor.execute("SELECT role FROM monkeys WHERE number = ?", (mn,))
+        role_rows.append(cursor.fetchone()[0])
+    new_orders = {}
+    starting_index = ms.get_role(int(getconfig("mroles_start_role"))).position
+    current_index = 1
+    for role in role_rows:
+        new_orders[ms.get_role(int(role))] = starting_index - current_index 
+        current_index = current_index + 1
+    await ms.edit_role_positions(new_orders)
 
+    
 
 
 @bot.slash_command(name="force_monkey_stocks",description="Forces the daily monkey stocks calculation. Be careful doing this multiple times.",guild_ids=[monke_server])
@@ -540,9 +554,29 @@ async def monkey_stocks_cmd(ctx):
 
 
 
+def monkey_history_plot(monkey_id = -1):
+    if monkey_id == -1:
+        pass # TODO: Plot all of them
+    else:
+        rows = cursor.execute("SELECT transaction_datetime, new_total FROM monkey_stocks WHERE monkey_number = ?",(monkey_id,))
+        data_x = []
+        data_y = []
+        for row in rows:
+            data_x.append(datetime.datetime.fromtimestamp(row[0]).strftime("%m/%d/%Y"))
+            data_y.append(row[1])
+        fig, ax = plt.subplots()
+        ax.plot(data_x, data_y)
+    filename = "tmp\\{}.png".format(str(uuid.uuid4()))
+    fig.savefig(filename)
+    #TODO: Send the damn file
 
 
-    
+@bot.slash_command(name="monkey_stock_history",description="Graphs a certain monkey's performance on the stock market.",guild_ids=[monke_server])
+@commands.check(staff_command)
+async def monkey_history_cmd(ctx, monkey_id):
+    await ctx.send("Working on it...")
+    monkey_history_plot(monkey_id)
+    await ctx.send("Done")
 
 @tasks.loop(seconds=3600)
 async def pisscheck():
@@ -564,6 +598,11 @@ async def pisscheck():
         cloudsuccess = monkecloud.upload_file("lastpisscheck.txt")
         if not cloudsuccess:
             await monke_log("Cloud save error in pisscheck", True)
+        
+        try:
+            await stock_monkeys()
+        except:
+            await monke_log("Monkey stocks failed :(", emergent=True)
             
 
 
