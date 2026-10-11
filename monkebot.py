@@ -569,14 +569,17 @@ def monkey_history_plot(monkey_id = -1):
     filename = "tmp\\{}.png".format(str(uuid.uuid4()))
     fig.savefig(filename)
     #TODO: Send the damn file
+    
+    return filename
 
 
 @bot.slash_command(name="monkey_stock_history",description="Graphs a certain monkey's performance on the stock market.",guild_ids=[monke_server])
 @commands.check(staff_command)
 async def monkey_history_cmd(ctx, monkey_id):
     await ctx.send("Working on it...")
-    monkey_history_plot(monkey_id)
-    await ctx.send("Done")
+    filename = monkey_history_plot(monkey_id)
+    await ctx.followup.send(content=None,file=nextcord.File(filename,filename="stonks.png"))
+    MonkeImages.cleanup([filename])
 
 @tasks.loop(seconds=3600)
 async def pisscheck():
