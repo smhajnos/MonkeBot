@@ -15,6 +15,8 @@ import sqlite3
 import monkecloud
 import random
 import MonkeImages
+import asyncio
+import math
 
 monke_server = 983896046700736522
 logs_channel = 1000524219517505656
@@ -37,6 +39,9 @@ rrhold = False
 
 bot = commands.Bot(command_prefix='}', intents=intents)
 
+monkecloud.download_all()
+dataWarehouse = sqlite3.connect("savedata/datawarehouse.db")
+cursor = dataWarehouse.cursor()
 
 def commit():
     dataWarehouse.commit()
@@ -402,41 +407,72 @@ async def yugioh(ctx, member):
 
 
 def monkey_embed(monkey_id):
-    print(1)
+    ms = bot.get_guild(monke_server)
     cursor.execute("SELECT name, scientific, picture, wikipedia, range, role FROM monkeys WHERE number = ?",(str(monkey_id),))
     res = cursor.fetchone()
-    print(2)
-    em = nextcord.Embed(color=mb_color,description=res[1],title=res[0])
+    monkey_role = ms.get_role(res[5])
+    monkey_color = monkey_role.color
+    em = nextcord.Embed(color=monkey_color,description=res[1],title=res[0])
     file = nextcord.File("monkeys/{}".format(res[2]), filename="image.png")
     em.set_image(url="attachment://image.png")
     em.add_field(name="Wikipedia",value=res[3])
     em.add_field(name="Range",value=res[4])
-    print(3)
+    em.set_footer(text=f"Monkey ID: {monkey_id}", icon_url=None)
     return (file, em)
     
 
-@bot.slash_command(name="monkey",description="View a monkey's ID card",guild_ids=[monke_server])
+@bot.slash_command(name="monkey",description="Selects a monkey",guild_ids=[monke_server])
 async def monkey_cmd(ctx, monkey_id):
-    print(4)
+    await ctx.response.defer()
+    monke = bot.get_guild(monke_server)
+    cursor.execute("SELECT role FROM monkeys WHERE number = ?",(str(monkey_id),))
+    row = cursor.fetchone()
+    rolestr = row[0]
+    role = [role for role in monke.roles if str(role.id) == str(rolestr)][0]
+    cursor.execute("SELECT role FROM monkeys",)
+    rows = [str(row[0]) for row in cursor]
+    all_monkey_roles = [role for role in monke.roles if str(role.id) in rows and str(role.id) != str(rolestr)]
+    for tr in ctx.user.roles:
+        if tr in all_monkey_roles:
+            await ctx.user.remove_roles(tr)
+    #await ctx.user.remove_roles(*all_monkey_roles)
+    await ctx.user.add_roles(role)
     (file, em) = monkey_embed(monkey_id)
     await ctx.send(file=file, embed=em)
-    print(5)
+
+@bot.slash_command(name="monkey_list",description="View all the monkeys' ID cards",guild_ids=[monke_server])
+async def monkey_list_cmd(ctx):
+    chan = ctx.channel
+    await ctx.send("Got it, listing monkeys...")
+    cursor.execute("SELECT number FROM monkeys")
+    rows = [row[0] for row in cursor] # When monkey_embed is called it uses the cursor, so we need to get the info out of the cursor first
+    for r in rows:    
+        print(r)
+        (file, em)  = monkey_embed(r)
+        await chan.send(file=file, embed=em)
+        await asyncio.sleep(0.5)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+def stock_monkeys():
+    cursor.execute("SELECT number FROM monkeys")
+    rows = [row[0] for row in cursor] 
+    daily_stock = random.randint(-10, 20)
+    ts = math.floor(datetime.datetime.now().timestamp())
+    for r in rows:
+        print(r)
+        cursor.execute("SELECT new_total FROM monkey_stocks WHERE monkey_number = ? ORDER BY transaction_datetime DESC", (r,))
+        
+        old_total_row = cursor.fetchone()
+        if old_total_row:
+            old_total = old_total_row[0]
+        else:
+            old_total = 0
+        
+        
+        monkey_stock = random.randint(-3,10)
+        cursor.execute("INSERT INTO monkey_stocks (transaction_datetime, monkey_number, delta, new_total) VALUES (?, ?, ?, ?)", (ts, r, daily_stock + monkey_stock, old_total + daily_stock + monkey_stock, ))
+    dataWarehouse.commit()
 
 
 
@@ -591,7 +627,5 @@ async def on_ready():
 
 
 print("Starting bot")
-monkecloud.download_all()
-dataWarehouse = sqlite3.connect("savedata/datawarehouse.db")
-cursor = dataWarehouse.cursor()
+
 bot.run(monkebotsecrets.DISCORD_TOKEN)
