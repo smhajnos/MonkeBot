@@ -568,8 +568,6 @@ def monkey_history_plot(monkey_id = -1):
         ax.plot(data_x, data_y)
     filename = "tmp\\{}.png".format(str(uuid.uuid4()))
     fig.savefig(filename)
-    #TODO: Send the damn file
-    
     return filename
 
 
