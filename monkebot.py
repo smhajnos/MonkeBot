@@ -30,7 +30,6 @@ staff_channel = 983900126605107260 #staff-bots
 staff_role = 1174417506342019142
 mayor_role = 1558839290270580817
 admin_role = 1004081695957459095
-banana_stocks_channel = 1558975686184673391`
 #piss_channel = logs_channel
 
 #dataWarehouse = sqlite3.connect("datawarehouse.db")
