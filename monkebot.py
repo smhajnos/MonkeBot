@@ -30,6 +30,8 @@ staff_channel = 983900126605107260 #staff-bots
 staff_role = 1174417506342019142
 mayor_role = 1558839290270580817
 admin_role = 1004081695957459095
+select_em = 1559373219973169213
+info_em = 1559373169188409444
 #piss_channel = logs_channel
 
 #dataWarehouse = sqlite3.connect("datawarehouse.db")
@@ -413,7 +415,22 @@ async def yugioh(ctx, member):
 
 
 
-
+@bot.slash_command(name="setup_monkeys",description="Please don't do this if you don't know what it does.",guild_ids=[monke_server])
+@application_checks.has_role(staff_role)
+async def setup_monkeys(ctx):
+    ctx.send("On it!")
+    chan = ctx.channel
+    ms = bot.get_guild(monke_server)
+    select_emoji = bot.get_emoji(select_em)
+    info_emoji = bot.get_emoji(info_em)
+    cursor.execute("SELECT role FROM monkeys",)
+    rows = [str(row[0]) for row in cursor]
+    all_monkey_roles = [role for role in ms.roles if str(role.id) in rows]
+    for monkey_role in all_monkey_roles:
+        message = await chan.send(monkey_role.mention)        
+        await message.add_reaction(select_emoji)
+        await message.add_reaction(info_emoji)
+    
 
 
 
@@ -661,7 +678,7 @@ async def influence_stocks(ctx, direction):
     
 @bot.slash_command(name="insider_trade",description="Give your stock a little nudge.",guild_ids=[monke_server])   
 @application_checks.has_role(mayor_role)
-async def iinsider_trade(ctx, on_or_off):
+async def insider_trade(ctx, on_or_off):
     if on_or_off in ["on","off"]:
         cursor.execute("SELECT COUNT(user) FROM mayor_settings WHERE user = ?",(ctx.user.id,))
         res = cursor.fetchone()
